@@ -34,16 +34,31 @@ index involved — see "Using this package" below for why.
 
 Consumers install a specific released wheel directly, not from a package
 index — there's no PyPI listing and no self-hosted index server to run.
-Each consumer repo has a `scripts/fetch-buska-core.sh` that downloads the
-pinned version's wheel via `gh release download` into a gitignored
-`vendor/` directory; `[tool.uv.sources]` in that repo's `pyproject.toml`
-points at the downloaded file for uv, and the Dockerfile `pip install`s it
-directly before `pip install -e .`. See either backend's `pyproject.toml`
-for the exact wiring.
 
-Bumping the version a consumer uses means updating two places there: the
-version pinned in `scripts/fetch-buska-core.sh` and the wheel filename in
-`[tool.uv.sources]`.
+`.github/actions/fetch-buska-core` in this repo is the one copy of the
+"download a release wheel into `./vendor`" logic. Each consumer:
+
+- Pins a version in a `.buska-core-version` file at its repo root (just
+  the tag, e.g. `v0.1.0`) — the single source of truth for that consumer's
+  buska-core version, read by both `make fetch-buska-core` (local dev,
+  also a dependency of `install`/`install-dev`/`docker-build`) and CI.
+- In CI, calls the shared action instead of keeping its own script:
+  ```yaml
+  - name: "Fetch buska-core"
+    uses: BusKa-org/buska-core/.github/actions/fetch-buska-core@main
+    with:
+      token: ${{ secrets.BUSKA_CORE_READ_TOKEN }}
+  ```
+  (the action reads `.buska-core-version` itself when `version` isn't
+  given explicitly)
+- Points `[tool.uv.sources]` at the downloaded wheel file for uv, and has
+  its Dockerfile `pip install` it directly before `pip install -e .`.
+
+See either backend's `Makefile`, `pyproject.toml`, and `Dockerfile` for
+the exact wiring.
+
+Bumping the version a consumer uses means updating two places there: its
+`.buska-core-version` file and the wheel filename in `[tool.uv.sources]`.
 
 ```python
 from flask import Flask
