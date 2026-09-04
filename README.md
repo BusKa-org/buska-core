@@ -12,6 +12,7 @@ doesn't belong here (§5).
 |---|---|---|
 | `buska_core/exceptions.py` | `municipal-backend/app/core/exceptions.py` | Typed application exceptions (`NotFoundError`, `ValidationError`, `ForbiddenError`, `UnauthorizedError`, `ConflictError`) |
 | `buska_core/error_handlers.py` | `municipal-backend/app/core/error_handlers.py` | `register_error_handlers()` and `register_jwt_handlers()` — a consistent HTTP error contract for any Flask app built on this package |
+| `buska_core/transaction.py` | `municipal-backend/app/core/transaction.py` | `transactional(session)` — commit/rollback context manager. Takes a `Session` explicitly instead of importing a project's global `db`, so this package doesn't need to own or assume any app's SQLAlchemy instance |
 
 Extraction sources only ever `municipal-backend`, never `corporate-backend` —
 anything touched inside `corporate-backend` since its 2026-08-03 fork was
@@ -23,11 +24,41 @@ IP until confirmed otherwise (ARQUITETURA_REPOSITORIOS.md §2).
 Nothing segment-specific. Not municipal's fixed-route scheduling, not
 PaqTcPB's DRT engine. See ARQUITETURA_REPOSITORIOS.md §5 for the full rule.
 
+## Releases
+
+Pushing a `vX.Y.Z` tag runs `.github/workflows/release.yml`: tests, lints,
+builds a wheel + sdist, and attaches them to a GitHub Release. No package
+index involved — see "Using this package" below for why.
+
 ## Using this package
 
-```bash
-uv add buska-core  # once published; for now, a path or git dependency
-```
+Consumers install a specific released wheel directly, not from a package
+index — there's no PyPI listing and no self-hosted index server to run.
+
+`.github/actions/fetch-buska-core` in this repo is the one copy of the
+"download a release wheel into `./vendor`" logic. Each consumer:
+
+- Pins a version in a `.buska-core-version` file at its repo root (just
+  the tag, e.g. `v0.1.0`) — the single source of truth for that consumer's
+  buska-core version, read by both `make fetch-buska-core` (local dev,
+  also a dependency of `install`/`install-dev`/`docker-build`) and CI.
+- In CI, calls the shared action instead of keeping its own script:
+  ```yaml
+  - name: "Fetch buska-core"
+    uses: BusKa-org/buska-core/.github/actions/fetch-buska-core@main
+    with:
+      token: ${{ secrets.BUSKA_CORE_READ_TOKEN }}
+  ```
+  (the action reads `.buska-core-version` itself when `version` isn't
+  given explicitly)
+- Points `[tool.uv.sources]` at the downloaded wheel file for uv, and has
+  its Dockerfile `pip install` it directly before `pip install -e .`.
+
+See either backend's `Makefile`, `pyproject.toml`, and `Dockerfile` for
+the exact wiring.
+
+Bumping the version a consumer uses means updating two places there: its
+`.buska-core-version` file and the wheel filename in `[tool.uv.sources]`.
 
 ```python
 from flask import Flask
@@ -52,7 +83,9 @@ uv run mypy buska_core
 
 ## Status
 
-Step 2 of the migration plan in `ARQUITETURA_REPOSITORIOS.md` §6 — first
-extraction landed (exceptions + error handlers). Auth, RBAC, tenancy
-(`Organizacao`), geo primitives, notifications, and the plugin-discovery
-mechanism are still to come.
+Step 2 of the migration plan in `ARQUITETURA_REPOSITORIOS.md` §6 — exceptions,
+error handlers, and the transaction context manager have landed. RBAC/authz,
+tenancy (`Organizacao`), geo primitives, notifications, and the
+plugin-discovery mechanism are still to come; most of those need real
+genericization work (e.g. `authz.py` is currently coupled to
+municipal-backend's `User`/`Gestor` models) rather than a straight copy.

@@ -1,0 +1,35 @@
+name: "Fetch buska-core"
+description: >
+  Downloads a buska-core release wheel into ./vendor. The single copy of
+  this logic — consumer repos reference it instead of each keeping their
+  own copy of the gh release download call.
+inputs:
+  version:
+    description: >
+      buska-core release tag to fetch, e.g. v0.1.0. Leave unset to read the
+      caller repo's ./.buska-core-version file instead — the recommended
+      way, so there's one file per consumer to bump rather than a value
+      duplicated into workflow YAML too.
+    required: false
+    default: ""
+  token:
+    description: "GitHub token with read access to BusKa-org/buska-core"
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        VERSION_INPUT: ${{ inputs.version }}
+      run: |
+        VERSION="$VERSION_INPUT"
+        if [ -z "$VERSION" ]; then
+          VERSION="$(cat .buska-core-version)"
+        fi
+        mkdir -p vendor
+        gh release download "$VERSION" \
+          --repo BusKa-org/buska-core \
+          --pattern "*.whl" \
+          --dir vendor \
+          --clobber
