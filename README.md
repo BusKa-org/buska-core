@@ -24,11 +24,26 @@ IP until confirmed otherwise (ARQUITETURA_REPOSITORIOS.md §2).
 Nothing segment-specific. Not municipal's fixed-route scheduling, not
 PaqTcPB's DRT engine. See ARQUITETURA_REPOSITORIOS.md §5 for the full rule.
 
+## Releases
+
+Pushing a `vX.Y.Z` tag runs `.github/workflows/release.yml`: tests, lints,
+builds a wheel + sdist, and attaches them to a GitHub Release. No package
+index involved — see "Using this package" below for why.
+
 ## Using this package
 
-```bash
-uv add buska-core  # once published; for now, a path or git dependency
-```
+Consumers install a specific released wheel directly, not from a package
+index — there's no PyPI listing and no self-hosted index server to run.
+Each consumer repo has a `scripts/fetch-buska-core.sh` that downloads the
+pinned version's wheel via `gh release download` into a gitignored
+`vendor/` directory; `[tool.uv.sources]` in that repo's `pyproject.toml`
+points at the downloaded file for uv, and the Dockerfile `pip install`s it
+directly before `pip install -e .`. See either backend's `pyproject.toml`
+for the exact wiring.
+
+Bumping the version a consumer uses means updating two places there: the
+version pinned in `scripts/fetch-buska-core.sh` and the wheel filename in
+`[tool.uv.sources]`.
 
 ```python
 from flask import Flask
