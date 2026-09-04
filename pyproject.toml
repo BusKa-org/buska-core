@@ -1,0 +1,75 @@
+[project]
+name = "buska-core"
+version = "0.1.0"
+description = "Shared core primitives for BusKá backends"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "flask>=3.1.2",
+    "flask-jwt-extended>=4.7.1",
+    "marshmallow>=3.20.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "black>=24.0.0",
+    "ruff>=0.15.0",
+    "mypy>=1.19.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["buska_core*"]
+
+# ==========================================
+# Tool Configurations — mirrors municipal-backend / corporate-backend
+# ==========================================
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+exclude = '''
+/(
+    \.git
+    | \.venv
+    | __pycache__
+)/
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [".venv"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "UP",     # pyupgrade
+]
+ignore = [
+    "E501",   # line too long (handled by black)
+    "B904",   # raise-without-from-inside-except (intentional: converting to user-friendly errors)
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+check_untyped_defs = true
+exclude = [".venv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
