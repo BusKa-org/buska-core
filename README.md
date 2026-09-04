@@ -13,6 +13,7 @@ doesn't belong here (§5).
 | `buska_core/exceptions.py` | `municipal-backend/app/core/exceptions.py` | Typed application exceptions (`NotFoundError`, `ValidationError`, `ForbiddenError`, `UnauthorizedError`, `ConflictError`) |
 | `buska_core/error_handlers.py` | `municipal-backend/app/core/error_handlers.py` | `register_error_handlers()` and `register_jwt_handlers()` — a consistent HTTP error contract for any Flask app built on this package |
 | `buska_core/transaction.py` | `municipal-backend/app/core/transaction.py` | `transactional(session)` — commit/rollback context manager. Takes a `Session` explicitly instead of importing a project's global `db`, so this package doesn't need to own or assume any app's SQLAlchemy instance |
+| `buska_core/config.py` | `app/core/config.py` (byte-for-byte identical in both backends) | `Settings` — env-driven DB/JWT/mail/CORS/Firebase config with fail-fast validation in production. Designed for subclassing: construct via `Settings.load()` (or a subclass's), not `Settings()` directly, so validation covers subclass fields too |
 
 Extraction sources only ever `municipal-backend`, never `corporate-backend` —
 anything touched inside `corporate-backend` since its 2026-08-03 fork was
@@ -84,8 +85,9 @@ uv run mypy buska_core
 ## Status
 
 Step 2 of the migration plan in `ARQUITETURA_REPOSITORIOS.md` §6 — exceptions,
-error handlers, and the transaction context manager have landed. RBAC/authz,
-tenancy (`Organizacao`), geo primitives, notifications, and the
-plugin-discovery mechanism are still to come; most of those need real
-genericization work (e.g. `authz.py` is currently coupled to
-municipal-backend's `User`/`Gestor` models) rather than a straight copy.
+error handlers, transaction, and config have landed. Geo, validation,
+security, notifications, and plugin-discovery are in a separate PR. RBAC/authz
+and tenancy (`Organizacao`) are still to come; both need real genericization
+work rather than a straight copy — `authz.py` is currently coupled to
+municipal-backend's `User`/`Gestor` models, and `Organizacao` is a full model
+with FKs throughout the app.
