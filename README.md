@@ -18,6 +18,7 @@ doesn't belong here (§5).
 | `buska_core/security.py` | `municipal-backend/app/utils/security.py` | `setup_security_headers()`, `check_production_security()` — CSP defaults to `'self'` only now; the original's CDN/map-tile allowances and `'unsafe-inline'`/`'unsafe-eval'` are opt-in params instead of unconditional. Also now actually applies `SESSION_COOKIE_SECURE`/`HTTPONLY`/`SAMESITE`, which the original declared but never set |
 | `buska_core/notifications.py` | `municipal-backend/app/utils/email_sender.py` | `send_email()` — also fixes the original logging the mail password in plaintext on every send |
 | `buska_core/plugins.py` | `corporate-backend/app/__init__.py`'s `_discover_plugins()` | `discover_plugins(group)` — `group` has no default; "mebuska" isn't a settled product name |
+| `buska_core/config.py` | `app/core/config.py` (byte-for-byte identical in both backends) | `Settings` — env-driven DB/JWT/mail/CORS/Firebase config with fail-fast validation in production. Designed for subclassing: construct via `Settings.load()` (or a subclass's), not `Settings()` directly, so validation covers subclass fields too |
 
 Extraction sources only ever `municipal-backend`, never `corporate-backend` —
 anything touched inside `corporate-backend` since its 2026-08-03 fork was
@@ -89,8 +90,9 @@ uv run mypy buska_core
 ## Status
 
 Step 2 of the migration plan in `ARQUITETURA_REPOSITORIOS.md` §6 — exceptions,
-error handlers, transaction, geo, validation, security, notifications, and
-plugin-discovery have landed. RBAC/authz and tenancy (`Organizacao`) are
-still to come; both need real genericization work rather than a straight
-copy — `authz.py` is currently coupled to municipal-backend's `User`/`Gestor`
-models, and `Organizacao` is a full model with FKs throughout the app.
+error handlers, transaction, geo, validation, security, notifications,
+plugin-discovery, and config have landed. RBAC/authz and tenancy
+(`Organizacao`) are still to come; both need real genericization work rather
+than a straight copy — `authz.py` is currently coupled to municipal-backend's
+`User`/`Gestor` models, and `Organizacao` is a full model with FKs throughout
+the app.
