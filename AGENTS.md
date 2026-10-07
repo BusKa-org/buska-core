@@ -44,24 +44,31 @@ Written for a reviewer with no chat context — a brief for someone deciding
 whether to approve, not a changelog of what you did. Four sections, in this
 order, every time:
 
-- **Contexto** — why this PR exists, 1-3 sentences. Link the
+- **Context** — why this PR exists, 1-3 sentences. Link the
   `ARQUITETURA_REPOSITORIOS.md` section it implements when there is one. If
   stacked on another PR, say which one, and which commit in the branch is
   actually new vs. already merged elsewhere.
-- **O que mudou** — bullets, one per module/concern, not a paragraph. A
+- **What changed** — bullets, one per module/concern, not a paragraph. A
   table beats prose for before/after numbers (test counts, line counts).
-- **Por quê** — the reasoning the diff alone can't show: why this approach
+- **Why** — the reasoning the diff alone can't show: why this approach
   over an alternative, what was dropped from the original and why, what was
   deliberately left out.
-- **Como testar** — what ran (`pytest`, `mypy`, etc.) and what it proves.
+- **How to test** — what ran (`pytest`, `mypy`, etc.) and what it proves.
 
 A sentence running past ~3 lines is a sign it should be a bullet or a table
 row instead. `.github/PULL_REQUEST_TEMPLATE.md` has the skeleton.
+
+## Language
+
+Everything here is English — code, comments, docs, commits, PR bodies. This
+package is domain-agnostic shared infra (see "What this is"), not product
+code with a user-facing surface, so unlike `municipal-backend`/
+`corporate-backend` there's no Portuguese side to carve out.
 
 ## Before opening a PR
 
 - [ ] `black --check`, `ruff check`, `mypy`, `pytest -q` all pass
 - [ ] `README.md`'s "What's in here" table and "Status" section updated if
       a module was added or moved
-- [ ] PR description follows `.github/PULL_REQUEST_TEMPLATE.md` (Contexto /
-      O que mudou / Por quê / Como testar)
+- [ ] PR description follows `.github/PULL_REQUEST_TEMPLATE.md` (Context /
+      What changed / Why / How to test)
