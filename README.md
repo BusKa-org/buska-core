@@ -48,12 +48,15 @@ index — there's no PyPI listing and no self-hosted index server to run.
   the tag, e.g. `v0.1.0`) — the single source of truth for that consumer's
   buska-core version, read by both `make fetch-buska-core` (local dev,
   also a dependency of `install`/`install-dev`/`docker-build`) and CI.
-- In CI, calls the shared action instead of keeping its own script:
+- In CI, calls the shared action instead of keeping its own script,
+  authenticating as a GitHub App installed on this repo (Contents:
+  Read-only) rather than a personal PAT — see "Authenticating CI" below:
   ```yaml
   - name: "Fetch buska-core"
     uses: BusKa-org/buska-core/.github/actions/fetch-buska-core@main
     with:
-      token: ${{ secrets.BUSKA_CORE_READ_TOKEN }}
+      app-client-id: ${{ secrets.BUSKA_CORE_APP_CLIENT_ID }}
+      app-private-key: ${{ secrets.BUSKA_CORE_APP_PRIVATE_KEY }}
   ```
   (the action reads `.buska-core-version` itself when `version` isn't
   given explicitly)
@@ -65,6 +68,30 @@ the exact wiring.
 
 Bumping the version a consumer uses means updating two places there: its
 `.buska-core-version` file and the wheel filename in `[tool.uv.sources]`.
+
+### Authenticating CI
+
+Consumer CI reads this repo's releases via a GitHub App, not a personal
+fine-grained PAT — a PAT is always someone's individual credential, so
+access breaks (or has to be silently re-issued under someone else's
+account) if that person leaves or their account is suspended. An App is
+an org-owned identity instead. One-time setup (org admin):
+
+1. **Settings → Developer settings → GitHub Apps → New GitHub App**, under
+   BusKa-org. Any name/homepage URL works; uncheck "Active" under Webhook
+   (not needed). Under "Repository permissions", set **Contents:
+   Read-only** — nothing else.
+2. "Where can this GitHub App be installed?" → **Only on this account**.
+3. Create the app, then generate a private key on its settings page
+   (downloads a `.pem` file) and note the **Client ID** shown there.
+4. **Install** the app (from its settings page, "Install App") onto
+   BusKa-org, selecting only the `buska-core` repository.
+5. In each consumer repo's **Settings → Secrets and variables →
+   Actions**, add `BUSKA_CORE_APP_CLIENT_ID` (the Client ID) and
+   `BUSKA_CORE_APP_PRIVATE_KEY` (the full `.pem` contents).
+
+CI then mints a token scoped only to this repo, valid for about an hour,
+on every run — nothing long-lived is stored beyond the App's own key.
 
 ```python
 from flask import Flask
