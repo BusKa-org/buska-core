@@ -34,7 +34,9 @@ PaqTcPB's DRT engine. See ARQUITETURA_REPOSITORIOS.md §5 for the full rule.
 
 Pushing a `vX.Y.Z` tag runs `.github/workflows/release.yml`: tests, lints,
 builds a wheel + sdist, and attaches them to a GitHub Release. No package
-index involved — see "Using this package" below for why.
+index involved — see "Using this package" below for why. Bump
+`pyproject.toml`'s `version` and add an entry to
+[`CHANGELOG.md`](CHANGELOG.md) in the same PR as the tag it describes.
 
 ## Using this package
 
