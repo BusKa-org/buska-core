@@ -13,6 +13,11 @@ doesn't belong here (§5).
 | `buska_core/exceptions.py` | `municipal-backend/app/core/exceptions.py` | Typed application exceptions (`NotFoundError`, `ValidationError`, `ForbiddenError`, `UnauthorizedError`, `ConflictError`) |
 | `buska_core/error_handlers.py` | `municipal-backend/app/core/error_handlers.py` | `register_error_handlers()` and `register_jwt_handlers()` — a consistent HTTP error contract for any Flask app built on this package |
 | `buska_core/transaction.py` | `municipal-backend/app/core/transaction.py` | `transactional(session)` — commit/rollback context manager. Takes a `Session` explicitly instead of importing a project's global `db`, so this package doesn't need to own or assume any app's SQLAlchemy instance |
+| `buska_core/geo.py` | `municipal-backend/app/utils/geo_utils.py` | `haversine_distance_meters()` |
+| `buska_core/validation.py` | `municipal-backend/app/utils/validators.py` | `validate_uuid()`, `validate_email()`, `validate_password()` — CPF stayed behind, it's Brazil-specific |
+| `buska_core/security.py` | `municipal-backend/app/utils/security.py` | `setup_security_headers()`, `check_production_security()` — CSP defaults to `'self'` only now; the original's CDN/map-tile allowances and `'unsafe-inline'`/`'unsafe-eval'` are opt-in params instead of unconditional. Also now actually applies `SESSION_COOKIE_SECURE`/`HTTPONLY`/`SAMESITE`, which the original declared but never set |
+| `buska_core/notifications.py` | `municipal-backend/app/utils/email_sender.py` | `send_email()` — also fixes the original logging the mail password in plaintext on every send |
+| `buska_core/plugins.py` | `corporate-backend/app/__init__.py`'s `_discover_plugins()` | `discover_plugins(group)` — `group` has no default; "mebuska" isn't a settled product name |
 
 Extraction sources only ever `municipal-backend`, never `corporate-backend` —
 anything touched inside `corporate-backend` since its 2026-08-03 fork was
@@ -84,8 +89,8 @@ uv run mypy buska_core
 ## Status
 
 Step 2 of the migration plan in `ARQUITETURA_REPOSITORIOS.md` §6 — exceptions,
-error handlers, and the transaction context manager have landed. RBAC/authz,
-tenancy (`Organizacao`), geo primitives, notifications, and the
-plugin-discovery mechanism are still to come; most of those need real
-genericization work (e.g. `authz.py` is currently coupled to
-municipal-backend's `User`/`Gestor` models) rather than a straight copy.
+error handlers, transaction, geo, validation, security, notifications, and
+plugin-discovery have landed. RBAC/authz and tenancy (`Organizacao`) are
+still to come; both need real genericization work rather than a straight
+copy — `authz.py` is currently coupled to municipal-backend's `User`/`Gestor`
+models, and `Organizacao` is a full model with FKs throughout the app.
